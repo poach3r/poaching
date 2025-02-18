@@ -1,65 +1,53 @@
 use rand::rngs::ThreadRng;
 use rand::seq::IndexedRandom;
 
-use crate::player::pronouns::*;
 use crate::player::status::*;
 use crate::player::*;
 use crate::scenario::*;
+use log::info;
 use rand::seq::SliceRandom;
 
 /// Simulates an entire game with predefined scenarios
 /// and players. This will be made much more modular
 /// in the future but this is more useful for
 /// rapid prototyping.
-pub fn simulate_game<'a>() -> Vec<Player<'a>> {
+pub fn simulate_game<'a>(
+    players: &mut Vec<Player>,
+    scenarios: &Vec<Vec<Scenario>>,
+    start_scenarios: &Vec<Vec<Scenario>>,
+) {
     let mut rng = rand::rng();
-    let scenarios = default_scenarios();
-    let mut players: Vec<Player> = vec![
-        Player::new("Bob", MALE),
-        Player::new("Susan", FEMALE),
-        Player::new("Mike", MALE),
-        Player::new("Jill", FEMALE),
-        Player::new("Jack", MALE),
-        Player::new("Chloe", FEMALE),
-        Player::new("James", MALE),
-        Player::new("Mary", FEMALE),
-        Player::new("Robert", MALE),
-        Player::new("Jennifer", FEMALE),
-        Player::new("Sam", ENBY),
-        Player::new("Elliot", ENBY),
-        Player::new("Anthony", MALE),
-        Player::new("Emily", FEMALE),
-    ];
-
     let mut current_day = 1u16;
 
     // game start
     println!("Day 1:");
-    let start_scenarios = game_start_scenarios();
-    simulate_round(&mut players, &start_scenarios, &mut rng);
+    simulate_round(players, &start_scenarios, &mut rng);
+    println!();
 
     // progress rounds
     while get_available_players(&players, 0).len() > 1 {
         current_day += 1;
         println!("Day {}:", current_day);
         players.shuffle(&mut rng);
-        simulate_round(&mut players, &scenarios, &mut rng);
+        simulate_round(players, scenarios, &mut rng);
+        println!();
     }
 
-    match get_available_players(&players, 0).first() {
+    match get_available_players(players, 0).first() {
         Some(winner) => println!("Winner: {}", players[*winner].name),
         _ => println!("Nobody won."),
     };
 
-    players
+    info!("Simulation ended with following result:\n{players:#?}");
 }
 
 /// Simulates a single round.
-fn simulate_round<'a, 'b>(
+pub fn simulate_round<'a, 'b>(
     players: &mut Vec<Player<'a>>,
     scenarios: &Vec<Vec<Scenario>>,
     rng: &'b mut ThreadRng,
-) {
+) -> String {
+    let mut string = String::new();
     let mut index: usize = 0;
     while index < players.len() {
         if let Status::Dead = players[index].status {
@@ -74,18 +62,17 @@ fn simulate_round<'a, 'b>(
         let indices = get_available_players(players, index);
         let scenario = get_scenario(scenarios, rng, players, &indices);
 
-        scenario.run(players, &indices);
+        string.push_str(scenario.run(players, &indices).as_str());
+        string.push('\n');
         index += 1;
     }
 
     for player in players {
         player.moved = false;
-
-        if crate::DEBUGGING_ENABLED {
-            println!("{}", player.to_string());
-        }
     }
-    println!();
+
+    string.pop(); // remove extra newline
+    string
 }
 
 /// Returns the indices of all players capable of moving.

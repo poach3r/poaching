@@ -1,7 +1,6 @@
 use crate::player::status::*;
 use crate::player::*;
 
-/// A scenario that occures with `arity` players.
 #[derive(Debug)]
 pub struct Scenario {
     pub condition: fn(players: &Vec<Player>, indices: &Vec<usize>) -> bool,
@@ -12,12 +11,12 @@ pub struct Scenario {
 impl Scenario {
     /// Prints the result of `get_message` and
     /// performs an action on every player involved.
-    pub fn run(&self, players: &mut Vec<Player>, indices: &Vec<usize>) {
-        println!("{}", (self.get_message)(players, indices));
+    pub fn run(&self, players: &mut Vec<Player>, indices: &Vec<usize>) -> String {
         for (index, action) in self.actions.iter().enumerate() {
             players[indices[index]].moved = true;
             action(&mut players[indices[index]]);
         }
+        (self.get_message)(players, indices)
     }
 
     fn nothing_burger(
