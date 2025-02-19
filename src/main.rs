@@ -8,19 +8,38 @@ use std::{
     io::{BufReader, Read},
 };
 
+use clap::Parser;
 use log::{error, info};
 use player::*;
 use serde::Deserialize;
 use serde_json::Value;
 
+#[derive(Parser, Debug)]
+#[command(version, about, long_about = None)]
+struct Args {
+    #[arg(short, long, default_value_t = String::from("players.json"))]
+    players: String,
+
+    #[arg(short, long, default_value_t = false)]
+    text_mode: bool,
+
+    #[arg(allow_hyphen_values = true, trailing_var_arg = true)]
+    gtk_options: Vec<String>,
+}
+
 fn main() {
+    let args = Args::parse();
     env_logger::init();
 
-    gui::run(
-        load_players_from_file(String::from("players.json")),
-        scenario::default_scenarios(),
-        scenario::game_start_scenarios(),
-    );
+    let scenarios = scenario::default_scenarios();
+    let start_scenarios = scenario::game_start_scenarios();
+    let mut players = load_players_from_file(args.players);
+
+    if args.text_mode {
+        simulator::simulate_game(&mut players, &scenarios, &start_scenarios);
+    } else {
+        gui::run(players, scenarios, start_scenarios, args.gtk_options);
+    }
 }
 
 fn load_players_from_file<'a>(filename: String) -> Vec<Player<'a>> {

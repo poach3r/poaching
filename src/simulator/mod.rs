@@ -21,7 +21,7 @@ pub fn simulate_game<'a>(
 
     // game start
     println!("Day 1:");
-    simulate_round(players, &start_scenarios, &mut rng);
+    println!("{}", simulate_round(players, &start_scenarios, &mut rng));
     println!();
 
     // progress rounds
@@ -29,7 +29,7 @@ pub fn simulate_game<'a>(
         current_day += 1;
         println!("Day {}:", current_day);
         players.shuffle(&mut rng);
-        simulate_round(players, scenarios, &mut rng);
+        println!("{}", simulate_round(players, scenarios, &mut rng));
         println!();
     }
 

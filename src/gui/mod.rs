@@ -1,8 +1,11 @@
+mod css;
+
 use crate::player::*;
 use crate::scenario::*;
 use crate::simulator::*;
 use crate::status::*;
 use gtk::prelude::*;
+use log::{error, info};
 use rand::rngs::ThreadRng;
 use rand::seq::SliceRandom;
 use relm4::prelude::*;
@@ -69,21 +72,36 @@ impl FactoryComponent for Round {
         #[root]
         gtk::Box {
             set_orientation: gtk::Orientation::Vertical,
-            set_spacing: 4,
+            add_css_class: "round",
+            set_spacing: 8,
 
-            gtk::Label {
-                set_label: &self.number.to_string().as_str(),
-            },
-
-            #[name(label)]
-            gtk::Label {
-                set_justify: gtk::Justification::Center,
-                set_label: &self.events,
-            },
-
-            self.players.widget() -> &gtk::FlowBox {
+            gtk::Box {
+                set_spacing: 2,
                 set_orientation: gtk::Orientation::Horizontal,
-                set_halign: gtk::Align::Fill
+                set_halign: gtk::Align::Fill,
+                set_valign: gtk::Align::Fill,
+
+                gtk::Box {
+                    set_halign: gtk::Align::Start,
+                    set_valign: gtk::Align::Start,
+                    gtk::Label {
+                        set_label: &self.number.to_string().as_str(),
+                    },
+                },
+
+                gtk::Box {
+                    set_halign: gtk::Align::Center,
+                    set_hexpand: true,
+                    gtk::Label {
+                        set_justify: gtk::Justification::Center,
+                        set_label: &self.events,
+                    },
+                },
+            },
+            self.players.widget() -> &gtk::FlowBox {
+                add_css_class: "statuses",
+                set_orientation: gtk::Orientation::Horizontal,
+                set_halign: gtk::Align::Fill,
             },
         }
     }
@@ -122,6 +140,8 @@ struct App {
 #[derive(Debug)]
 enum AppMsg {
     AddRound,
+    NewGame,
+    LoadPlayers,
 }
 
 #[relm4::component]
@@ -136,11 +156,33 @@ impl SimpleComponent for App {
             set_default_size: (300, 100),
 
             gtk::Box {
+                set_spacing: 8,
+                add_css_class: "main",
                 set_orientation: gtk::Orientation::Vertical,
 
-                gtk::Button {
-                    set_label: "Simulate Round",
-                    connect_clicked => AppMsg::AddRound,
+                gtk::Box {
+                    set_orientation: gtk::Orientation::Horizontal,
+                    set_spacing: 8,
+                    set_halign: gtk::Align::Fill,
+                    set_hexpand: true,
+
+                    gtk::Button {
+                        set_label: "Simulate Round",
+                        connect_clicked => AppMsg::AddRound,
+                        set_hexpand: true,
+                    },
+
+                    gtk::Button {
+                        set_label: "New Game",
+                        connect_clicked => AppMsg::NewGame,
+                        set_hexpand: true,
+                    },
+
+                    gtk::Button {
+                        set_label: "Load Players", // TODO
+                        connect_clicked => AppMsg::LoadPlayers,
+                        set_hexpand: true,
+                    },
                 },
 
                 gtk::ScrolledWindow {
@@ -151,8 +193,8 @@ impl SimpleComponent for App {
                     #[local_ref]
                     rounds_box -> gtk::Box {
                         set_orientation: gtk::Orientation::Vertical,
-                        set_spacing: 18,
-                    }
+                        set_spacing: 8,
+                    },
                 }
             }
         }
@@ -161,6 +203,7 @@ impl SimpleComponent for App {
     fn update(&mut self, msg: Self::Input, _sender: ComponentSender<Self>) {
         match msg {
             AppMsg::AddRound => {
+                info!("Adding new round.");
                 let amt = self.rounds.len();
                 self.players.shuffle(&mut self.rng);
                 let events = if amt == 0 {
@@ -171,6 +214,13 @@ impl SimpleComponent for App {
                 self.rounds
                     .guard()
                     .push_back((amt + 1, events, self.players.clone()));
+            }
+            AppMsg::NewGame => {
+                info!("Starting new game.");
+                for player in self.players.iter_mut() {
+                    player.heal();
+                }
+                self.rounds.guard().clear();
             }
             _ => (),
         }
@@ -204,7 +254,9 @@ pub fn run(
     players: Vec<Player<'static>>,
     scenarios: Vec<Vec<Scenario>>,
     start_scenarios: Vec<Vec<Scenario>>,
+    gtk_options: Vec<String>,
 ) {
-    let app = RelmApp::new("org.poach3r.hunger_games");
+    let app = RelmApp::new("org.poach3r.hunger_games").with_args(gtk_options);
+    relm4::set_global_css(css::STYLE);
     app.run::<App>((players, scenarios, start_scenarios));
 }
