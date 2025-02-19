@@ -5,10 +5,11 @@ use crate::scenario::*;
 use crate::simulator::*;
 use crate::status::*;
 use gtk::prelude::*;
-use log::{error, info};
+use log::{error, info, warn};
 use rand::rngs::ThreadRng;
 use rand::seq::SliceRandom;
 use relm4::prelude::*;
+use relm4::set_global_css;
 
 #[derive(Debug)]
 struct PlayerWrapper {
@@ -135,6 +136,7 @@ struct App {
     start_scenarios: Vec<Vec<Scenario>>,
     rng: ThreadRng,
     rounds: FactoryVecDeque<Round>,
+    dark_mode: bool,
 }
 
 #[derive(Debug)]
@@ -142,11 +144,17 @@ enum AppMsg {
     AddRound,
     NewGame,
     LoadPlayers,
+    ToggleTheme,
 }
 
 #[relm4::component]
 impl SimpleComponent for App {
-    type Init = (Vec<Player<'static>>, Vec<Vec<Scenario>>, Vec<Vec<Scenario>>);
+    type Init = (
+        Vec<Player<'static>>,
+        Vec<Vec<Scenario>>,
+        Vec<Vec<Scenario>>,
+        bool,
+    );
     type Input = AppMsg;
     type Output = ();
 
@@ -183,6 +191,12 @@ impl SimpleComponent for App {
                         connect_clicked => AppMsg::LoadPlayers,
                         set_hexpand: true,
                     },
+
+                    gtk::Button {
+                        set_label: "Toggle Theme",
+                        connect_clicked => AppMsg::ToggleTheme,
+                        set_hexpand: true,
+                    }
                 },
 
                 gtk::ScrolledWindow {
@@ -222,6 +236,15 @@ impl SimpleComponent for App {
                 }
                 self.rounds.guard().clear();
             }
+            AppMsg::ToggleTheme => {
+                if self.dark_mode {
+                    self.dark_mode = false;
+                    css::enable_light_mode();
+                } else {
+                    self.dark_mode = true;
+                    css::enable_dark_mode();
+                }
+            }
             _ => (),
         }
     }
@@ -241,6 +264,7 @@ impl SimpleComponent for App {
             start_scenarios: init.2,
             rng: rand::rng(),
             rounds,
+            dark_mode: init.3,
         };
 
         let rounds_box = model.rounds.widget();
@@ -257,6 +281,16 @@ pub fn run(
     gtk_options: Vec<String>,
 ) {
     let app = RelmApp::new("org.poach3r.hunger_games").with_args(gtk_options);
-    relm4::set_global_css(css::STYLE);
-    app.run::<App>((players, scenarios, start_scenarios));
+    let dark_mode = if let Some(s) = gtk::Settings::default() {
+        s.is_gtk_application_prefer_dark_theme()
+    } else {
+        warn!("Failed to find GTK settings.");
+        true
+    };
+    if dark_mode {
+        css::enable_dark_mode();
+    } else {
+        css::enable_light_mode();
+    }
+    app.run::<App>((players, scenarios, start_scenarios, dark_mode));
 }
