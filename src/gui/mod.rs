@@ -6,12 +6,12 @@ use rand::seq::SliceRandom;
 use relm4::prelude::*;
 
 #[derive(Debug)]
-struct P {
+struct PlayerWrapper {
     player: Player<'static>,
 }
 
 #[relm4::factory]
-impl FactoryComponent for P {
+impl FactoryComponent for PlayerWrapper {
     type Init = crate::player::Player<'static>;
     type Input = ();
     type Output = ();
@@ -44,7 +44,7 @@ impl FactoryComponent for P {
     }
 
     fn init_model(player: Self::Init, _index: &DynamicIndex, _sender: FactorySender<Self>) -> Self {
-        P { player }
+        PlayerWrapper { player }
     }
 }
 
@@ -52,7 +52,7 @@ impl FactoryComponent for P {
 struct Round {
     number: usize,
     events: String,
-    players: FactoryVecDeque<P>,
+    players: FactoryVecDeque<PlayerWrapper>,
 }
 
 #[relm4::factory]
@@ -118,7 +118,7 @@ struct App {
 
 #[derive(Debug)]
 enum AppMsg {
-    AddCounter,
+    AddRound,
 }
 
 #[relm4::component]
@@ -140,7 +140,7 @@ impl SimpleComponent for App {
 
                 gtk::Button {
                     set_label: "Simulate Round",
-                    connect_clicked => AppMsg::AddCounter,
+                    connect_clicked => AppMsg::AddRound,
                 },
 
                 gtk::ScrolledWindow {
@@ -160,7 +160,7 @@ impl SimpleComponent for App {
 
     fn update(&mut self, msg: Self::Input, _sender: ComponentSender<Self>) {
         match msg {
-            AppMsg::AddCounter => {
+            AppMsg::AddRound => {
                 let amt = self.rounds.len();
                 self.players.shuffle(&mut self.rng);
                 let events = crate::simulator::simulate_round(
