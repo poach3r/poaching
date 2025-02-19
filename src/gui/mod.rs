@@ -59,7 +59,7 @@ struct Round {
 
 #[relm4::factory]
 impl FactoryComponent for Round {
-    type Init = (usize, String, Vec<crate::player::Player<'static>>);
+    type Init = (usize, String, Vec<Player<'static>>);
     type Input = ();
     type Output = ();
     type CommandOutput = ();
