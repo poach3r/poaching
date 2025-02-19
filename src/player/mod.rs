@@ -25,9 +25,10 @@ pub struct JsonPlayer {
 
 impl<'a> From<&JsonPlayer> for Player<'a> {
     fn from(value: &JsonPlayer) -> Self {
-        let pronouns = match value.gender.as_str() {
-            "Male" | "male" | "MALE" => MALE,
-            "Female" | "female" | "FEMALE" => FEMALE,
+        let pronouns = match value.gender.to_lowercase().as_str() {
+            "male" => MALE,
+            "female" => FEMALE,
+            "enby" => ENBY,
             _ => {
                 warn!(
                     "Failed to deserialize {}'s gender, defaulting to ENBY.",
@@ -90,12 +91,5 @@ impl<'a> Player<'a> {
     /// Changes a player's `status` to `Alive(Healthy)`.
     pub fn heal(&mut self) {
         self.status = Status::Alive(AliveStatus::Healthy);
-    }
-
-    pub fn to_string(&self) -> String {
-        format!(
-            "name: {}, status: {:?}, moved: {}",
-            self.name, self.status, self.moved
-        )
     }
 }
