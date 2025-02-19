@@ -114,6 +114,7 @@ impl FactoryComponent for Round {
 struct App {
     players: Vec<Player<'static>>,
     scenarios: Vec<Vec<Scenario>>,
+    start_scenarios: Vec<Vec<Scenario>>,
     rng: ThreadRng,
     rounds: FactoryVecDeque<Round>,
 }
@@ -125,7 +126,7 @@ enum AppMsg {
 
 #[relm4::component]
 impl SimpleComponent for App {
-    type Init = (Vec<Player<'static>>, Vec<Vec<Scenario>>);
+    type Init = (Vec<Player<'static>>, Vec<Vec<Scenario>>, Vec<Vec<Scenario>>);
     type Input = AppMsg;
     type Output = ();
 
@@ -162,7 +163,11 @@ impl SimpleComponent for App {
             AppMsg::AddRound => {
                 let amt = self.rounds.len();
                 self.players.shuffle(&mut self.rng);
-                let events = simulate_round(&mut self.players, &self.scenarios, &mut self.rng);
+                let events = if amt == 0 {
+                    simulate_round(&mut self.players, &self.start_scenarios, &mut self.rng)
+                } else {
+                    simulate_round(&mut self.players, &self.scenarios, &mut self.rng)
+                };
                 self.rounds
                     .guard()
                     .push_back((amt + 1, events, self.players.clone()));
@@ -183,6 +188,7 @@ impl SimpleComponent for App {
         let model = App {
             players: init.0,
             scenarios: init.1,
+            start_scenarios: init.2,
             rng: rand::rng(),
             rounds,
         };
@@ -194,7 +200,11 @@ impl SimpleComponent for App {
     }
 }
 
-pub fn run(players: Vec<Player<'static>>, scenarios: Vec<Vec<Scenario>>) {
-    let app = RelmApp::new("relm4.example.factory");
-    app.run::<App>((players, scenarios));
+pub fn run(
+    players: Vec<Player<'static>>,
+    scenarios: Vec<Vec<Scenario>>,
+    start_scenarios: Vec<Vec<Scenario>>,
+) {
+    let app = RelmApp::new("org.poach3r.hunger_games");
+    app.run::<App>((players, scenarios, start_scenarios));
 }

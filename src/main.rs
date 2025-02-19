@@ -16,9 +16,11 @@ use serde_json::Value;
 fn main() {
     env_logger::init();
 
-    let players = load_players_from_file(String::from("players.json"));
-    let scenarios = scenario::default_scenarios();
-    gui::run(players, scenarios);
+    gui::run(
+        load_players_from_file(String::from("players.json")),
+        scenario::default_scenarios(),
+        scenario::game_start_scenarios(),
+    );
 }
 
 fn load_players_from_file<'a>(filename: String) -> Vec<Player<'a>> {
