@@ -1,4 +1,6 @@
-use crate::player::Player;
+use crate::player::*;
+use crate::scenario::*;
+use crate::simulator::*;
 use crate::status::*;
 use gtk::prelude::*;
 use rand::rngs::ThreadRng;
@@ -12,7 +14,7 @@ struct PlayerWrapper {
 
 #[relm4::factory]
 impl FactoryComponent for PlayerWrapper {
-    type Init = crate::player::Player<'static>;
+    type Init = Player<'static>;
     type Input = ();
     type Output = ();
     type CommandOutput = ();
@@ -110,8 +112,8 @@ impl FactoryComponent for Round {
 }
 
 struct App {
-    players: Vec<crate::player::Player<'static>>,
-    scenarios: Vec<Vec<crate::scenario::Scenario>>,
+    players: Vec<Player<'static>>,
+    scenarios: Vec<Vec<Scenario>>,
     rng: ThreadRng,
     rounds: FactoryVecDeque<Round>,
 }
@@ -123,10 +125,7 @@ enum AppMsg {
 
 #[relm4::component]
 impl SimpleComponent for App {
-    type Init = (
-        Vec<crate::player::Player<'static>>,
-        Vec<Vec<crate::scenario::Scenario>>,
-    );
+    type Init = (Vec<Player<'static>>, Vec<Vec<Scenario>>);
     type Input = AppMsg;
     type Output = ();
 
@@ -163,11 +162,7 @@ impl SimpleComponent for App {
             AppMsg::AddRound => {
                 let amt = self.rounds.len();
                 self.players.shuffle(&mut self.rng);
-                let events = crate::simulator::simulate_round(
-                    &mut self.players,
-                    &self.scenarios,
-                    &mut self.rng,
-                );
+                let events = simulate_round(&mut self.players, &self.scenarios, &mut self.rng);
                 self.rounds
                     .guard()
                     .push_back((amt + 1, events, self.players.clone()));
@@ -199,10 +194,7 @@ impl SimpleComponent for App {
     }
 }
 
-pub fn run(
-    players: Vec<crate::player::Player<'static>>,
-    scenarios: Vec<Vec<crate::scenario::Scenario>>,
-) {
+pub fn run(players: Vec<Player<'static>>, scenarios: Vec<Vec<Scenario>>) {
     let app = RelmApp::new("relm4.example.factory");
     app.run::<App>((players, scenarios));
 }
