@@ -9,7 +9,6 @@ use log::{error, info, warn};
 use rand::rngs::ThreadRng;
 use rand::seq::SliceRandom;
 use relm4::prelude::*;
-use relm4::set_global_css;
 
 #[derive(Debug)]
 struct PlayerWrapper {
@@ -145,6 +144,7 @@ enum AppMsg {
     NewGame,
     LoadPlayers,
     ToggleTheme,
+    LoadPlayersActually(gtk::gio::File),
 }
 
 #[relm4::component]
@@ -187,7 +187,7 @@ impl SimpleComponent for App {
                     },
 
                     gtk::Button {
-                        set_label: "Load Players", // TODO
+                        set_label: "Load Players",
                         connect_clicked => AppMsg::LoadPlayers,
                         set_hexpand: true,
                     },
@@ -214,7 +214,7 @@ impl SimpleComponent for App {
         }
     }
 
-    fn update(&mut self, msg: Self::Input, _sender: ComponentSender<Self>) {
+    fn update(&mut self, msg: Self::Input, sender: ComponentSender<Self>) {
         match msg {
             AppMsg::AddRound => {
                 info!("Adding new round.");
@@ -243,6 +243,48 @@ impl SimpleComponent for App {
                 } else {
                     self.dark_mode = true;
                     css::enable_dark_mode();
+                }
+            }
+            AppMsg::LoadPlayers => {
+                let f = gtk::FileChooserDialog::builder()
+                    .title("File Chooser")
+                    .action(gtk::FileChooserAction::Open)
+                    .decorated(true)
+                    .build();
+
+                f.add_button("Open", gtk::ResponseType::Accept);
+                f.connect_response(
+                    move |chooser: &gtk::FileChooserDialog, response: gtk::ResponseType| {
+                        if let None = chooser.file() {
+                            error!("User attempted to load players file, but none was found.");
+                            chooser.destroy();
+                            return;
+                        }
+
+                        if let gtk::ResponseType::Accept = response {
+                            sender.input(AppMsg::LoadPlayersActually(chooser.file().unwrap()));
+                            chooser.destroy();
+                        }
+                    },
+                );
+                f.show();
+            }
+            AppMsg::LoadPlayersActually(file) => {
+                if let Some(players) = crate::load_players_path(file.path().unwrap()) {
+                    self.players = players;
+                } else {
+                    let message = gtk::MessageDialog::builder()
+                        .title("Error")
+                        .text("Failed to load players file.")
+                        .buttons(gtk::ButtonsType::Ok)
+                        .build();
+
+                    message.connect_response(|message, response| {
+                        if let gtk::ResponseType::Ok = response {
+                            message.destroy();
+                        }
+                    });
+                    message.show();
                 }
             }
             _ => (),
