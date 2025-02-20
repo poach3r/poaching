@@ -5,10 +5,11 @@ use crate::scenario::*;
 use crate::simulator::*;
 use crate::status::*;
 use gtk::prelude::*;
-use log::{error, info, warn};
+use log::{info, warn};
 use rand::rngs::ThreadRng;
 use rand::seq::SliceRandom;
 use relm4::prelude::*;
+use relm4::set_global_css;
 
 #[derive(Debug)]
 struct PlayerWrapper {
@@ -72,7 +73,8 @@ impl FactoryComponent for Round {
         #[root]
         gtk::Box {
             set_orientation: gtk::Orientation::Vertical,
-            add_css_class: "round",
+            add_css_class: "view",
+            add_css_class: "container",
             set_spacing: 8,
 
             gtk::Box {
@@ -98,8 +100,10 @@ impl FactoryComponent for Round {
                     },
                 },
             },
+
             self.players.widget() -> &gtk::FlowBox {
-                add_css_class: "statuses",
+                add_css_class: "background",
+                add_css_class: "container",
                 set_orientation: gtk::Orientation::Horizontal,
                 set_halign: gtk::Align::Fill,
             },
@@ -135,7 +139,6 @@ struct App {
     start_scenarios: Vec<Vec<Scenario>>,
     rng: ThreadRng,
     rounds: FactoryVecDeque<Round>,
-    dark_mode: bool,
 }
 
 #[derive(Debug)]
@@ -143,18 +146,12 @@ enum AppMsg {
     AddRound,
     NewGame,
     LoadPlayers,
-    ToggleTheme,
     LoadPlayersActually(gtk::gio::File),
 }
 
 #[relm4::component]
 impl SimpleComponent for App {
-    type Init = (
-        Vec<Player<'static>>,
-        Vec<Vec<Scenario>>,
-        Vec<Vec<Scenario>>,
-        bool,
-    );
+    type Init = (Vec<Player<'static>>, Vec<Vec<Scenario>>, Vec<Vec<Scenario>>);
     type Input = AppMsg;
     type Output = ();
 
@@ -162,54 +159,43 @@ impl SimpleComponent for App {
         gtk::Window {
             set_title: Some("Hunger Games Simulator"),
             set_default_size: (300, 100),
-
-            gtk::Box {
-                set_spacing: 8,
-                add_css_class: "main",
-                set_orientation: gtk::Orientation::Vertical,
-
-                gtk::Box {
-                    set_orientation: gtk::Orientation::Horizontal,
-                    set_spacing: 8,
-                    set_halign: gtk::Align::Fill,
-                    set_hexpand: true,
-
+            #[wrap(Some)]
+            set_titlebar = &gtk::HeaderBar {
+                #[wrap(Some)]
+                set_title_widget = &gtk::Box {
+                    add_css_class: "devel",
+                    add_css_class: "linked",
                     gtk::Button {
+                        add_css_class: "pill",
                         set_label: "Simulate Round",
                         connect_clicked => AppMsg::AddRound,
-                        set_hexpand: true,
                     },
 
                     gtk::Button {
+                        add_css_class: "pill",
                         set_label: "New Game",
                         connect_clicked => AppMsg::NewGame,
-                        set_hexpand: true,
                     },
 
                     gtk::Button {
+                        add_css_class: "pill",
                         set_label: "Load Players",
                         connect_clicked => AppMsg::LoadPlayers,
-                        set_hexpand: true,
                     },
-
-                    gtk::Button {
-                        set_label: "Toggle Theme",
-                        connect_clicked => AppMsg::ToggleTheme,
-                        set_hexpand: true,
-                    }
                 },
+            },
 
-                gtk::ScrolledWindow {
-                    set_hscrollbar_policy: gtk::PolicyType::Never,
-                    set_hexpand: true,
-                    set_vexpand: true,
+            gtk::ScrolledWindow {
+                set_hscrollbar_policy: gtk::PolicyType::Never,
+                set_hexpand: true,
+                set_vexpand: true,
+                add_css_class: "main",
 
-                    #[local_ref]
-                    rounds_box -> gtk::Box {
-                        set_orientation: gtk::Orientation::Vertical,
-                        set_spacing: 8,
-                    },
-                }
+                #[local_ref]
+                rounds_box -> gtk::Box {
+                    set_orientation: gtk::Orientation::Vertical,
+                    set_spacing: 8,
+                },
             }
         }
     }
@@ -236,15 +222,6 @@ impl SimpleComponent for App {
                 }
                 self.rounds.guard().clear();
             }
-            AppMsg::ToggleTheme => {
-                if self.dark_mode {
-                    self.dark_mode = false;
-                    css::enable_light_mode();
-                } else {
-                    self.dark_mode = true;
-                    css::enable_dark_mode();
-                }
-            }
             AppMsg::LoadPlayers => {
                 let f = gtk::FileChooserDialog::builder()
                     .title("File Chooser")
@@ -256,7 +233,7 @@ impl SimpleComponent for App {
                 f.connect_response(
                     move |chooser: &gtk::FileChooserDialog, response: gtk::ResponseType| {
                         if let None = chooser.file() {
-                            error!("User attempted to load players file, but none was found.");
+                            warn!("User attempted to load players file, but none was found.");
                             chooser.destroy();
                             return;
                         }
@@ -287,7 +264,6 @@ impl SimpleComponent for App {
                     message.show();
                 }
             }
-            _ => (),
         }
     }
 
@@ -306,7 +282,6 @@ impl SimpleComponent for App {
             start_scenarios: init.2,
             rng: rand::rng(),
             rounds,
-            dark_mode: init.3,
         };
 
         let rounds_box = model.rounds.widget();
@@ -323,16 +298,6 @@ pub fn run(
     gtk_options: Vec<String>,
 ) {
     let app = RelmApp::new("org.poach3r.hunger_games").with_args(gtk_options);
-    let dark_mode = if let Some(s) = gtk::Settings::default() {
-        s.is_gtk_application_prefer_dark_theme()
-    } else {
-        warn!("Failed to find GTK settings.");
-        true
-    };
-    if dark_mode {
-        css::enable_dark_mode();
-    } else {
-        css::enable_light_mode();
-    }
-    app.run::<App>((players, scenarios, start_scenarios, dark_mode));
+    set_global_css(&css::style());
+    app.run::<App>((players, scenarios, start_scenarios));
 }
