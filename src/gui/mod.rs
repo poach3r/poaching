@@ -224,7 +224,7 @@ impl SimpleComponent for App {
             }
             AppMsg::LoadPlayers => {
                 let f = gtk::FileChooserDialog::builder()
-                    .title("File Chooser")
+                    .title("Open File")
                     .action(gtk::FileChooserAction::Open)
                     .decorated(true)
                     .build();
