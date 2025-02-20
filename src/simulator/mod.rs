@@ -11,8 +11,8 @@ use rand::seq::SliceRandom;
 /// and players. This will be made much more modular
 /// in the future but this is more useful for
 /// rapid prototyping.
-pub fn simulate_game<'a>(
-    players: &mut Vec<Player>,
+pub fn simulate_game<'a, 'b>(
+    players: &'a mut Vec<Player<'b>>,
     scenarios: &Vec<Vec<Scenario>>,
     start_scenarios: &Vec<Vec<Scenario>>,
 ) {
@@ -21,7 +21,7 @@ pub fn simulate_game<'a>(
 
     // game start
     println!("Day 1:");
-    println!("{}", simulate_round(players, &start_scenarios, &mut rng));
+    println!("{}", simulate_round(players, &start_scenarios, &mut rng).0);
     println!();
 
     // progress rounds
@@ -29,7 +29,7 @@ pub fn simulate_game<'a>(
         current_day += 1;
         println!("Day {}:", current_day);
         players.shuffle(&mut rng);
-        println!("{}", simulate_round(players, scenarios, &mut rng));
+        println!("{}", simulate_round(players, scenarios, &mut rng).0);
         println!();
     }
 
@@ -42,11 +42,14 @@ pub fn simulate_game<'a>(
 }
 
 /// Simulates a single round.
-pub fn simulate_round<'a, 'b>(
-    players: &mut Vec<Player<'a>>,
+/// Returns a string containing all
+/// the scenarios that occurred and
+/// whether the game ended.
+pub fn simulate_round<'a, 'b, 'c>(
+    players: &'a mut Vec<Player<'c>>,
     scenarios: &Vec<Vec<Scenario>>,
     rng: &'b mut ThreadRng,
-) -> String {
+) -> (String, bool) {
     let mut string = String::new();
     let mut index: usize = 0;
     while index < players.len() {
@@ -67,12 +70,21 @@ pub fn simulate_round<'a, 'b>(
         index += 1;
     }
 
-    for player in players {
+    for player in players.iter_mut() {
         player.moved = false;
     }
 
-    string.pop(); // remove extra newline
-    string
+    let living = get_available_players(&players, 0);
+    if living.len() == 0 {
+        string.push_str("Nobody won.");
+        (string, true)
+    } else if living.len() == 1 {
+        string.push_str(format!("{} won.", players[living[0]].name).as_str());
+        (string, true)
+    } else {
+        string.pop(); // remove extra newline
+        (string, false)
+    }
 }
 
 /// Returns the indices of all players capable of moving.

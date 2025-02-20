@@ -133,12 +133,19 @@ impl FactoryComponent for Round {
     }
 }
 
+#[tracker::track]
 struct App {
+    #[tracker::do_not_track]
     players: Vec<Player<'static>>,
+    #[tracker::do_not_track]
     scenarios: Vec<Vec<Scenario>>,
+    #[tracker::do_not_track]
     start_scenarios: Vec<Vec<Scenario>>,
+    #[tracker::do_not_track]
     rng: ThreadRng,
+    #[tracker::do_not_track]
     rounds: FactoryVecDeque<Round>,
+    game_over: bool,
 }
 
 #[derive(Debug)]
@@ -165,10 +172,13 @@ impl SimpleComponent for App {
                 set_title_widget = &gtk::Box {
                     add_css_class: "devel",
                     add_css_class: "linked",
+
                     gtk::Button {
                         add_css_class: "pill",
                         set_label: "Simulate Round",
                         connect_clicked => AppMsg::AddRound,
+                        #[track = "model.changed_game_over()"]
+                        set_sensitive: !model.game_over,
                     },
 
                     gtk::Button {
@@ -201,26 +211,34 @@ impl SimpleComponent for App {
     }
 
     fn update(&mut self, msg: Self::Input, sender: ComponentSender<Self>) {
+        self.reset();
+
         match msg {
             AppMsg::AddRound => {
                 info!("Adding new round.");
-                let amt = self.rounds.len();
+
                 self.players.shuffle(&mut self.rng);
+                let amt = self.rounds.len();
                 let events = if amt == 0 {
                     simulate_round(&mut self.players, &self.start_scenarios, &mut self.rng)
                 } else {
                     simulate_round(&mut self.players, &self.scenarios, &mut self.rng)
                 };
+
+                self.set_game_over(events.1);
                 self.rounds
                     .guard()
-                    .push_back((amt + 1, events, self.players.clone()));
+                    .push_back((amt + 1, events.0, self.players.clone()));
             }
             AppMsg::NewGame => {
                 info!("Starting new game.");
+
                 for player in self.players.iter_mut() {
                     player.heal();
                 }
+
                 self.rounds.guard().clear();
+                self.set_game_over(false);
             }
             AppMsg::LoadPlayers => {
                 let f = gtk::FileChooserDialog::builder()
@@ -249,6 +267,7 @@ impl SimpleComponent for App {
             AppMsg::LoadPlayersActually(file) => {
                 if let Some(players) = crate::load_players_path(file.path().unwrap()) {
                     self.players = players;
+                    self.set_game_over(true); // prevents the user from continuing the current game with the new players
                 } else {
                     let message = gtk::MessageDialog::builder()
                         .title("Error")
@@ -282,8 +301,9 @@ impl SimpleComponent for App {
             start_scenarios: init.2,
             rng: rand::rng(),
             rounds,
+            game_over: false,
+            tracker: 0,
         };
-
         let rounds_box = model.rounds.widget();
         let widgets = view_output!();
 
