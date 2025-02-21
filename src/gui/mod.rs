@@ -43,12 +43,6 @@ impl FactoryComponent for PlayerWrapper {
         }
     }
 
-    fn update(&mut self, msg: Self::Input, _sender: FactorySender<Self>) {
-        match msg {
-            _ => (),
-        }
-    }
-
     fn init_model(player: Self::Init, _index: &DynamicIndex, _sender: FactorySender<Self>) -> Self {
         PlayerWrapper { player }
     }
@@ -107,12 +101,6 @@ impl FactoryComponent for Round {
                 set_orientation: gtk::Orientation::Horizontal,
                 set_halign: gtk::Align::Fill,
             },
-        }
-    }
-
-    fn update(&mut self, msg: Self::Input, _sender: FactorySender<Self>) {
-        match msg {
-            _ => (),
         }
     }
 

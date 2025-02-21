@@ -14,6 +14,7 @@ pub struct Player<'a> {
     pub status: Status,
     pub pronouns: Pronouns<'a>,
     pub moved: bool,
+    pub district: u8,
 }
 
 /// Represents a player in JSON form.
@@ -21,6 +22,7 @@ pub struct Player<'a> {
 pub struct JsonPlayer {
     name: String,
     gender: String,
+    district: u8,
 }
 
 impl<'a> From<&JsonPlayer> for Player<'a> {
@@ -37,7 +39,7 @@ impl<'a> From<&JsonPlayer> for Player<'a> {
                 ENBY
             }
         };
-        Self::new(value.name.clone(), pronouns)
+        Self::new(value.name.clone(), pronouns, value.district)
     }
 }
 
@@ -54,18 +56,19 @@ impl<'a> From<JsonPlayer> for Player<'a> {
                 ENBY
             }
         };
-        Self::new(value.name, pronouns)
+        Self::new(value.name, pronouns, value.district)
     }
 }
 
 impl<'a> Player<'a> {
     /// Constructs a player at the start of a simulator.
-    pub fn new(name: String, pronouns: Pronouns<'a>) -> Self {
+    pub fn new(name: String, pronouns: Pronouns<'a>, district: u8) -> Self {
         Self {
             name,
             status: Status::Alive(AliveStatus::Healthy),
             pronouns,
             moved: false,
+            district,
         }
     }
 
