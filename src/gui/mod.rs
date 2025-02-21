@@ -1,5 +1,7 @@
 mod css;
 
+use std::cmp::Ordering;
+
 use crate::player::*;
 use crate::scenario::*;
 use crate::simulator::*;
@@ -40,6 +42,10 @@ impl FactoryComponent for PlayerWrapper {
                     _ => "Dead"
                 }
             },
+
+            gtk::Label {
+                set_text: &self.player.district.to_string()
+            }
         }
     }
 
@@ -153,7 +159,8 @@ impl SimpleComponent for App {
     view! {
         gtk::Window {
             set_title: Some("Hunger Games Simulator"),
-            set_default_size: (300, 100),
+            set_default_size: (600, 700),
+
             #[wrap(Some)]
             set_titlebar = &gtk::HeaderBar {
                 #[wrap(Some)]
@@ -213,10 +220,11 @@ impl SimpleComponent for App {
                     simulate_round(&mut self.players, &self.scenarios, &mut self.rng)
                 };
 
+                let mut players = self.players.clone();
+                players.sort_by(|x, y| x.district.cmp(&y.district).reverse());
+
                 self.set_game_over(events.1);
-                self.rounds
-                    .guard()
-                    .push_back((amt + 1, events.0, self.players.clone()));
+                self.rounds.guard().push_back((amt + 1, events.0, players));
             }
             AppMsg::NewGame => {
                 info!("Starting new game.");
