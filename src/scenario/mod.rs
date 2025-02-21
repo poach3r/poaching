@@ -4,19 +4,20 @@ use crate::player::*;
 #[derive(Debug)]
 pub struct Scenario {
     pub condition: fn(players: &Vec<Player>, indices: &Vec<usize>) -> bool,
-    pub get_message: fn(players: &Vec<Player>, indices: &Vec<usize>) -> String,
-    pub actions: Vec<fn(player: &mut Player)>,
+    pub message: fn(players: &Vec<Player>, indices: &Vec<usize>) -> String,
+    pub actions: fn(players: &mut Vec<Player>, indices: &Vec<usize>),
 }
 
 impl Scenario {
     /// Prints the result of `get_message` and
     /// performs an action on every player involved.
-    pub fn run(&self, players: &mut Vec<Player>, indices: &Vec<usize>) -> String {
-        for (index, action) in self.actions.iter().enumerate() {
-            players[indices[index]].moved = true;
-            action(&mut players[indices[index]]);
+    pub fn run(&self, players: &mut Vec<Player>, indices: &Vec<usize>, arity: usize) -> String {
+        for index in 0..arity {
+            players[indices[index]].moved = true
         }
-        (self.get_message)(players, indices)
+
+        (self.actions)(players, indices);
+        (self.message)(players, indices)
     }
 
     fn nothing_burger(
@@ -24,8 +25,8 @@ impl Scenario {
     ) -> Scenario {
         Scenario {
             condition: |_, _| true,
-            get_message,
-            actions: vec![|_| {}],
+            message: get_message,
+            actions: |_, _| {},
         }
     }
 }
@@ -53,54 +54,127 @@ pub fn game_start_scenarios() -> Vec<Vec<Scenario>> {
                 )
             }),
             Scenario::nothing_burger(|players, indices| {
-                format!("{} ran away.", players[indices[0]].name)
+                format!(
+                    "{} clutched a first-aid kit and ran away.",
+                    players[indices[0]].name
+                )
+            }),
+            Scenario::nothing_burger(|players, indices| {
+                format!(
+                    "{} takes a sickle from inside the Cornucopia.",
+                    players[indices[0]].name
+                )
+            }),
+            Scenario::nothing_burger(|players, indices| {
+                format!(
+                    "{} finds a bag full of explosives",
+                    players[indices[0]].name
+                )
+            }),
+            Scenario::nothing_burger(|players, indices| {
+                format!(
+                    "{} grabs a shield leaning on the Cornucopia.",
+                    players[indices[0]].name
+                )
+            }),
+            Scenario::nothing_burger(|players, indices| {
+                format!(
+                    "{} runs away with a lighter and some rope.",
+                    players[indices[0]].name
+                )
             }),
         ],
         vec![
             Scenario {
                 condition: |_, _| true,
-                get_message: |players, indices| {
+                message: |players, indices| {
+                    format!(
+                        "{} fought {} for a bag but lost and ran away.",
+                        players[indices[0]].name, players[indices[1]].name
+                    )
+                },
+                actions: |players, indices| {
+                    players[indices[0]].hurt();
+                },
+            },
+            Scenario {
+                condition: |_, _| true,
+                message: |players, indices| {
+                    format!(
+                        "{} scared {} away from the Cornucopia.",
+                        players[indices[0]].name, players[indices[1]].name
+                    )
+                },
+                actions: |_, _| {},
+            },
+            Scenario {
+                condition: |_, _| true,
+                message: |players, indices| {
+                    format!(
+                        "{} broke {}'s nose for a basket of bread.",
+                        players[indices[0]].name, players[indices[1]].name
+                    )
+                },
+                actions: |players, indices| {
+                    players[indices[1]].hurt();
+                },
+            },
+            Scenario {
+                condition: |_, _| true,
+                message: |players, indices| {
                     format!(
                         "{} got into a fistfight with {}.",
                         players[indices[0]].name, players[indices[1]].name
                     )
                 },
-                actions: vec![
-                    |player| {
-                        player.hurt();
-                    },
-                    |player| {
-                        player.hurt();
-                    },
-                ],
+                actions: |players, indices| {
+                    players[indices[0]].hurt();
+                    players[indices[1]].hurt();
+                },
             },
             Scenario {
                 condition: |_, _| true,
-                get_message: |players, indices| {
+                message: |players, indices| {
                     format!(
                         "{} curbstomped {}.",
                         players[indices[0]].name, players[indices[1]].name
                     )
                 },
-                actions: vec![|_| {}, |player| {
-                    player.kill();
-                }],
-            },
-            Scenario {
-                condition: |_, _| true,
-                get_message: |players, indices| {
-                    format!(
-                        "{} stabbed {} and couldn't stop {} from laughing.",
-                        players[indices[0]].name,
-                        players[indices[1]].name,
-                        players[indices[0]].pronouns.reflexive
-                    )
+                actions: |players, indices| {
+                    players[indices[1]].kill();
                 },
-                actions: vec![|_| {}, |player| {
-                    player.kill();
-                }],
             },
         ],
+        vec![Scenario {
+            condition: |_, _| true,
+            message: |players, indices| {
+                format!(
+                    "I don't feel like writing what {}, {} and {} did because im lazy.",
+                    players[indices[0]].name, players[indices[1]].name, players[indices[2]].name
+                )
+            },
+            actions: |_, _| {},
+        }],
+        vec![Scenario {
+            condition: |_, _| true,
+            message: |players, indices| {
+                format!(
+                    "{} and {} fought {} and {}. {} and {} survived.",
+                    players[indices[0]].name,
+                    players[indices[1]].name,
+                    players[indices[2]].name,
+                    players[indices[3]].name,
+                    players[indices[0]].name,
+                    players[indices[1]].name,
+                )
+            },
+            actions: |players, indices| {
+                players[indices[0]].hurt();
+                players[indices[1]].hurt();
+                players[indices[3]].kill();
+                players[indices[4]].kill();
+            },
+        }],
     ]
 }
 
@@ -145,28 +219,28 @@ pub fn default_scenarios() -> Vec<Vec<Scenario>> {
                         false
                     }
                 },
-                get_message: |players, indices| {
+                message: |players, indices| {
                     format!(
                         "{} tried and failed to kill a deer.",
                         players[indices[0]].name
                     )
                 },
-                actions: vec![|_| {}],
+                actions: |_, _| {},
             },
             Scenario {
                 condition: |_, _| true,
-                get_message: |players, indices| {
+                message: |players, indices| {
                     format!("{} was bitten by a snake.", players[indices[0]].name)
                 },
-                actions: vec![|player| {
-                    player.hurt();
-                }],
+                actions: |players, indices| {
+                    players[indices[0]].hurt();
+                },
             },
         ],
         vec![
             Scenario {
                 condition: |_, _| true,
-                get_message: |players, indices| {
+                message: |players, indices| {
                     format!(
                         "{} caught {} off guard and killed {}.",
                         players[indices[0]].name,
@@ -174,26 +248,22 @@ pub fn default_scenarios() -> Vec<Vec<Scenario>> {
                         players[indices[1]].pronouns.object
                     )
                 },
-                actions: vec![|_| {}, |player| {
-                    player.kill();
-                }],
+                actions: |players, indices| {
+                    players[indices[1]].kill();
+                },
             },
             Scenario {
                 condition: |_, _| true,
-                get_message: |players, indices| {
+                message: |players, indices| {
                     format!(
                         "{} got into a fistfight with {}.",
                         players[indices[0]].name, players[indices[1]].name
                     )
                 },
-                actions: vec![
-                    |player| {
-                        player.hurt();
-                    },
-                    |player| {
-                        player.hurt();
-                    },
-                ],
+                actions: |players, indices| {
+                    players[indices[0]].hurt();
+                    players[indices[1]].hurt();
+                },
             },
             Scenario {
                 condition: |players, indices| {
@@ -203,50 +273,46 @@ pub fn default_scenarios() -> Vec<Vec<Scenario>> {
                         false
                     }
                 },
-                get_message: |players, indices| {
+                message: |players, indices| {
                     format!(
                         "{} tended to {}'s wounds.",
                         players[indices[0]].name, players[indices[1]].name
                     )
                 },
-                actions: vec![|_| {}, |player| {
-                    player.heal();
-                }],
+                actions: |players, indices| {
+                    players[indices[1]].heal();
+                },
             },
             Scenario {
                 condition: |_, _| true,
-                get_message: |players, indices| {
+                message: |players, indices| {
                     format!(
                         "{} and {} poisoned eachother.",
                         players[indices[0]].name, players[indices[1]].name
                     )
                 },
-                actions: vec![
-                    |player| {
-                        player.kill();
-                    },
-                    |player| {
-                        player.kill();
-                    },
-                ],
+                actions: |players, indices| {
+                    players[indices[0]].kill();
+                    players[indices[1]].kill();
+                },
             },
             Scenario {
                 condition: |_, _| true,
-                get_message: |players, indices| {
+                message: |players, indices| {
                     format!(
                         "{} hit {} with a throwing knife.",
                         players[indices[0]].name, players[indices[1]].name
                     )
                 },
-                actions: vec![|_| {}, |player| {
-                    player.kill();
-                }],
+                actions: |players, indices| {
+                    players[indices[1]].kill();
+                },
             },
         ],
         vec![
             Scenario {
                 condition: |_, _| true,
-                get_message: |players, indices| {
+                message: |players, indices| {
                     format!(
                         "{}, {} and {} discussed their plans for tomorrow.",
                         players[indices[0]].name,
@@ -254,11 +320,11 @@ pub fn default_scenarios() -> Vec<Vec<Scenario>> {
                         players[indices[2]].name
                     )
                 },
-                actions: vec![|_| {}, |_| {}, |_| {}],
+                actions: |_, _| {},
             },
             Scenario {
                 condition: |_, _| true,
-                get_message: |players, indices| {
+                message: |players, indices| {
                     format!(
                         "{} and {} were hunting {} together until {} betrayed {}.",
                         players[indices[0]].name,
@@ -268,11 +334,13 @@ pub fn default_scenarios() -> Vec<Vec<Scenario>> {
                         players[indices[0]].pronouns.object
                     )
                 },
-                actions: vec![|player| player.kill(), |_| {}, |_| {}],
+                actions: |players, indices| {
+                    players[indices[0]].kill();
+                },
             },
             Scenario {
                 condition: |_, _| true,
-                get_message: |players, indices| {
+                message: |players, indices| {
                     format!(
                         "{}, {} and {} were crushed by a falling tree at night.",
                         players[indices[0]].name,
@@ -280,22 +348,16 @@ pub fn default_scenarios() -> Vec<Vec<Scenario>> {
                         players[indices[2]].name
                     )
                 },
-                actions: vec![
-                    |player| {
-                        player.kill();
-                    },
-                    |player| {
-                        player.kill();
-                    },
-                    |player| {
-                        player.kill();
-                    },
-                ],
+                actions: |players, indices| {
+                    players[indices[0]].kill();
+                    players[indices[1]].kill();
+                    players[indices[2]].kill();
+                },
             },
         ],
         vec![Scenario {
             condition: |_, _| true,
-            get_message: |players, indices| {
+            message: |players, indices| {
                 format!(
                     "{}, {}, {} and {} sang songs around a campfire.",
                     players[indices[0]].name,
@@ -304,7 +366,7 @@ pub fn default_scenarios() -> Vec<Vec<Scenario>> {
                     players[indices[3]].name
                 )
             },
-            actions: vec![|_| {}, |_| {}, |_| {}, |_| {}],
+            actions: |_, _| {},
         }],
     ]
 }

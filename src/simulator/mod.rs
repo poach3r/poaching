@@ -63,9 +63,9 @@ pub fn simulate_round<'a, 'b, 'c>(
         }
 
         let indices = get_available_players(players, index);
-        let scenario = get_scenario(scenarios, rng, players, &indices);
+        let (scenario, arity) = get_scenario(scenarios, rng, players, &indices);
 
-        string.push_str(scenario.run(players, &indices).as_str());
+        string.push_str(scenario.run(players, &indices, arity).as_str());
         string.push('\n');
         index += 1;
     }
@@ -114,9 +114,9 @@ fn get_scenario<'a, 'b>(
     rng: &'b mut ThreadRng,
     players: &Vec<Player>,
     indices: &Vec<usize>,
-) -> &'a Scenario {
+) -> (&'a Scenario, usize) {
     loop {
-        let mut random_scenes: Vec<&Scenario> = Vec::new();
+        let mut random_scenes: Vec<(&Scenario, usize)> = Vec::new();
 
         for i in 0..scenarios.len() {
             if i >= indices.len() {
@@ -127,17 +127,13 @@ fn get_scenario<'a, 'b>(
                 Some(s) => s,
                 None => {
                     panic!(
-                        "{}",
-                        "Failed to choose a scenario. Please send this full message to poacher.
-                         rng: {rng:?}
-                         scenarios: {scenarios:?}"
-                            .trim()
+                        "Failed to choose a scenario. Please send this full message to poacher. \nrng: {rng:?}\nscenarios: {scenarios:?}"
                     );
                 }
             };
 
             if (possible_scene.condition)(players, indices) {
-                random_scenes.push(possible_scene);
+                random_scenes.push((possible_scene, i));
             }
         }
 
