@@ -1,7 +1,5 @@
 mod css;
 
-use std::cmp::Ordering;
-
 use crate::player::*;
 use crate::scenario::*;
 use crate::simulator::*;
