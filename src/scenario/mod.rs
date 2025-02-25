@@ -38,50 +38,92 @@ impl Scenario {
 pub fn game_start_scenarios() -> Vec<Vec<Scenario>> {
     vec![
         vec![
-            Scenario::nothing_burger(|players, indices| {
-                format!("{} found some food.", players[indices[0]].name)
-            }),
-            Scenario::nothing_burger(|players, indices| {
-                format!("{} found bottled water.", players[indices[0]].name)
-            }),
-            Scenario::nothing_burger(|players, indices| {
-                format!("{} sprinted into the woods.", players[indices[0]].name)
-            }),
+            Scenario {
+                condition: |_, _| true,
+                message: |players, indices| {
+                    format!("{} found some bread.", players[indices[0]].name)
+                },
+                actions: |players, indices| {
+                    players[indices[0]].inventory.push(&item::BREAD);
+                },
+            },
+            Scenario {
+                condition: |_, _| true,
+                message: |players, indices| {
+                    format!("{} found bottled water.", players[indices[0]].name)
+                },
+                actions: |players, indices| {
+                    players[indices[0]].inventory.push(&item::WATER);
+                },
+            },
             Scenario::nothing_burger(|players, indices| {
                 format!(
                     "{} tried to grab supplies but was scared off.",
                     players[indices[0]].name
                 )
             }),
-            Scenario::nothing_burger(|players, indices| {
-                format!(
-                    "{} clutched a first-aid kit and ran away.",
-                    players[indices[0]].name
-                )
-            }),
-            Scenario::nothing_burger(|players, indices| {
-                format!(
-                    "{} takes a sickle from inside the Cornucopia.",
-                    players[indices[0]].name
-                )
-            }),
-            Scenario::nothing_burger(|players, indices| {
-                format!(
-                    "{} finds a bag full of explosives",
-                    players[indices[0]].name
-                )
-            }),
-            Scenario::nothing_burger(|players, indices| {
-                format!(
-                    "{} grabs a shield leaning on the Cornucopia.",
-                    players[indices[0]].name
-                )
-            }),
+            Scenario {
+                condition: |_, _| true,
+                message: |players, indices| {
+                    format!(
+                        "{} clutched a first-aid kit and ran away.",
+                        players[indices[0]].name
+                    )
+                },
+                actions: |players, indices| {
+                    players[indices[0]].inventory.push(&item::MEDKIT);
+                },
+            },
+            Scenario {
+                condition: |_, _| true,
+                message: |players, indices| {
+                    format!(
+                        "{} took a sickle from inside the Cornucopia.",
+                        players[indices[0]].name
+                    )
+                },
+                actions: |players, indices| {
+                    players[indices[0]].inventory.push(&item::SICKLE);
+                },
+            },
+            Scenario {
+                condition: |_, _| true,
+                message: |players, indices| {
+                    format!(
+                        "{} found a bag full of explosives.",
+                        players[indices[0]].name
+                    )
+                },
+                actions: |players, indices| {
+                    players[indices[0]].inventory.push(&item::EXPLOSIVES);
+                },
+            },
+            Scenario {
+                condition: |_, _| true,
+                message: |players, indices| {
+                    format!(
+                        "{} grabbed a shield leaning on the Cornucopia.",
+                        players[indices[0]].name
+                    )
+                },
+                actions: |players, indices| {
+                    players[indices[0]].inventory.push(&item::SHIELD);
+                },
+            },
             Scenario::nothing_burger(|players, indices| {
                 format!(
                     "{} runs away with a lighter and some rope.",
                     players[indices[0]].name
                 )
+            }),
+            Scenario::nothing_burger(|players, indices| {
+                format!("{} sprinted into the woods.", players[indices[0]].name)
+            }),
+            Scenario::nothing_burger(|players, indices| {
+                format!("{} sprinted into the woods.", players[indices[0]].name)
+            }),
+            Scenario::nothing_burger(|players, indices| {
+                format!("{} sprinted into the woods.", players[indices[0]].name)
             }),
         ],
         vec![
@@ -95,6 +137,7 @@ pub fn game_start_scenarios() -> Vec<Vec<Scenario>> {
                 },
                 actions: |players, indices| {
                     players[indices[0]].hurt();
+                    players[indices[1]].inventory.push(&item::BREAD);
                 },
             },
             Scenario {
@@ -116,6 +159,7 @@ pub fn game_start_scenarios() -> Vec<Vec<Scenario>> {
                     )
                 },
                 actions: |players, indices| {
+                    players[indices[0]].inventory.push(&item::BREAD);
                     players[indices[1]].hurt();
                 },
             },
@@ -171,8 +215,8 @@ pub fn game_start_scenarios() -> Vec<Vec<Scenario>> {
             actions: |players, indices| {
                 players[indices[0]].hurt();
                 players[indices[1]].hurt();
+                players[indices[2]].kill();
                 players[indices[3]].kill();
-                players[indices[4]].kill();
             },
         }],
     ]
@@ -214,6 +258,47 @@ pub fn default_scenarios() -> Vec<Vec<Scenario>> {
             Scenario {
                 condition: |players, indices| {
                     if let Status::Alive(AliveStatus::Healthy) = players[indices[0]].status {
+                        return false;
+                    }
+
+                    for item in players[indices[0]].inventory.iter() {
+                        if let item::Kind::Healing = item.kind {
+                            return true;
+                        }
+                    }
+
+                    false
+                },
+                message: |players, indices| {
+                    let mut item_name = "";
+                    for (i, item) in players[indices[0]].inventory.iter().enumerate() {
+                        if let item::Kind::Healing = item.kind {
+                            item_name = item.name;
+                            break;
+                        }
+                    }
+
+                    format!(
+                        "{} healed {} with {} {}.",
+                        players[indices[0]].name,
+                        players[indices[0]].pronouns.reflexive,
+                        players[indices[0]].pronouns.possessive_adj,
+                        item_name
+                    )
+                },
+                actions: |players, indices| {
+                    for (i, item) in players[indices[0]].inventory.iter().enumerate() {
+                        if let item::Kind::Healing = item.kind {
+                            players[indices[0]].inventory.remove(i);
+                            break;
+                        }
+                    }
+                    players[indices[0]].heal()
+                },
+            },
+            Scenario {
+                condition: |players, indices| {
+                    if let Status::Alive(AliveStatus::Healthy) = players[indices[0]].status {
                         true
                     } else {
                         false
@@ -228,12 +313,53 @@ pub fn default_scenarios() -> Vec<Vec<Scenario>> {
                 actions: |_, _| {},
             },
             Scenario {
+                condition: |players, indices| {
+                    for item in players[indices[0]].inventory.iter() {
+                        if let item::Kind::Weapon = item.kind {
+                            return true;
+                        }
+                    }
+
+                    false
+                },
+                message: |players, indices| {
+                    let weapon = players[indices[0]]
+                        .inventory
+                        .iter()
+                        .filter(|x| {
+                            if let item::Kind::Weapon = x.kind {
+                                true
+                            } else {
+                                false
+                            }
+                        })
+                        .collect::<Vec<&&item::Item>>()[0];
+                    format!(
+                        "{} killed a deer with their {}.",
+                        players[indices[0]].name, weapon.name
+                    )
+                },
+                actions: |_, _| {},
+            },
+            Scenario {
                 condition: |_, _| true,
                 message: |players, indices| {
                     format!("{} was bitten by a snake.", players[indices[0]].name)
                 },
                 actions: |players, indices| {
                     players[indices[0]].hurt();
+                },
+            },
+            Scenario {
+                condition: |_, _| true,
+                message: |players, indices| {
+                    format!(
+                        "{} made a knife out of flint and a stick.",
+                        players[indices[0]].name
+                    )
+                },
+                actions: |players, indices| {
+                    players[indices[0]].inventory.push(&item::KNIFE);
                 },
             },
         ],
@@ -297,10 +423,18 @@ pub fn default_scenarios() -> Vec<Vec<Scenario>> {
                 },
             },
             Scenario {
-                condition: |_, _| true,
+                condition: |players, indices| {
+                    for item in players[indices[0]].inventory.iter() {
+                        if *item == &item::KNIFE {
+                            return true;
+                        }
+                    }
+
+                    false
+                },
                 message: |players, indices| {
                     format!(
-                        "{} hit {} with a throwing knife.",
+                        "{} hit {} with a long distance knife throw.",
                         players[indices[0]].name, players[indices[1]].name
                     )
                 },
@@ -338,22 +472,22 @@ pub fn default_scenarios() -> Vec<Vec<Scenario>> {
                     players[indices[0]].kill();
                 },
             },
-            Scenario {
-                condition: |_, _| true,
-                message: |players, indices| {
-                    format!(
-                        "{}, {} and {} were crushed by a falling tree at night.",
-                        players[indices[0]].name,
-                        players[indices[1]].name,
-                        players[indices[2]].name
-                    )
-                },
-                actions: |players, indices| {
-                    players[indices[0]].kill();
-                    players[indices[1]].kill();
-                    players[indices[2]].kill();
-                },
-            },
+            //Scenario {
+            //    condition: |_, _| true,
+            //    message: |players, indices| {
+            //        format!(
+            //            "{}, {} and {} were crushed by a falling tree at night.",
+            //            players[indices[0]].name,
+            //            players[indices[1]].name,
+            //            players[indices[2]].name
+            //        )
+            //    },
+            //    actions: |players, indices| {
+            //        players[indices[0]].kill();
+            //        players[indices[1]].kill();
+            //        players[indices[2]].kill();
+            //    },
+            //},
         ],
         vec![Scenario {
             condition: |_, _| true,

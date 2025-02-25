@@ -229,6 +229,7 @@ impl SimpleComponent for App {
 
                 for player in self.players.iter_mut() {
                     player.heal();
+                    player.inventory.clear();
                 }
 
                 self.rounds.guard().clear();

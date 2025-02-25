@@ -1,3 +1,4 @@
+pub mod item;
 pub mod pronouns;
 pub mod status;
 
@@ -15,6 +16,7 @@ pub struct Player<'a> {
     pub pronouns: Pronouns<'a>,
     pub moved: bool,
     pub district: u8,
+    pub inventory: Vec<&'a item::Item>,
 }
 
 /// Represents a player in JSON form.
@@ -69,6 +71,7 @@ impl<'a> Player<'a> {
             pronouns,
             moved: false,
             district,
+            inventory: Vec::new(),
         }
     }
 
