@@ -335,8 +335,10 @@ pub fn default_scenarios() -> Vec<Vec<Scenario>> {
                         })
                         .collect::<Vec<&&item::Item>>()[0];
                     format!(
-                        "{} killed a deer with their {}.",
-                        players[indices[0]].name, weapon.name
+                        "{} killed a deer with {} {}.",
+                        players[indices[0]].name,
+                        players[indices[0]].pronouns.possessive_adj,
+                        weapon.name
                     )
                 },
                 actions: |_, _| {},
