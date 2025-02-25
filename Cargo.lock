@@ -644,20 +644,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9a3a5bfb195931eeb336b2a7b4d761daec841b97f947d34394601737a7bba5e4"
 
 [[package]]
-name = "hunger_games"
-version = "0.1.0"
-dependencies = [
- "clap",
- "env_logger",
- "log",
- "rand",
- "relm4",
- "serde",
- "serde_json",
- "tracker",
-]
-
-[[package]]
 name = "indexmap"
 version = "2.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -800,6 +786,20 @@ name = "pkg-config"
 version = "0.3.31"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "953ec861398dccce10c670dfeaf3ec4911ca479e9c02154b3a215178c5f566f2"
+
+[[package]]
+name = "poaching"
+version = "0.1.0"
+dependencies = [
+ "clap",
+ "env_logger",
+ "log",
+ "rand",
+ "relm4",
+ "serde",
+ "serde_json",
+ "tracker",
+]
 
 [[package]]
 name = "ppv-lite86"
