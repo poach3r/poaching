@@ -32,8 +32,8 @@ fn main() {
     let args = Args::parse();
     env_logger::init();
 
-    let scenarios = scenario::default_scenarios();
-    let start_scenarios = scenario::game_start_scenarios();
+    let scenarios = scenario::default_scenarios::get();
+    let start_scenarios = scenario::start_scenarios::get();
     let mut players = if let Some(players) = load_players_filename(args.players) {
         players
     } else {
