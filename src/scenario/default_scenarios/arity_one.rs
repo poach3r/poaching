@@ -39,38 +39,28 @@ pub fn get() -> Vec<Scenario> {
                     return false;
                 }
 
-                for item in players[indices[0]].inventory.iter() {
-                    if let item::Kind::Healing = item.kind {
-                        return true;
-                    }
-                }
-
-                false
+                players[indices[0]]
+                    .get_item_kind(item::Kind::Healing)
+                    .is_some()
             },
             message: |players, indices| {
-                let mut item_name = "";
-                for item in players[indices[0]].inventory.iter() {
-                    if let item::Kind::Healing = item.kind {
-                        item_name = item.name;
-                        break;
-                    }
-                }
+                let item_index = players[indices[0]]
+                    .get_item_kind(item::Kind::Healing)
+                    .unwrap();
 
                 format!(
                     "{} healed {} with {} {}.",
                     players[indices[0]].name,
                     players[indices[0]].pronouns.reflexive,
                     players[indices[0]].pronouns.possessive_adj,
-                    item_name
+                    players[indices[0]].inventory[item_index].name
                 )
             },
             actions: |players, indices| {
-                for (i, item) in players[indices[0]].inventory.iter().enumerate() {
-                    if let item::Kind::Healing = item.kind {
-                        players[indices[0]].inventory.remove(i);
-                        break;
-                    }
-                }
+                let item_index = players[indices[0]]
+                    .get_item_kind(item::Kind::Healing)
+                    .unwrap();
+                players[indices[0]].inventory.remove(item_index);
                 players[indices[0]].heal()
             },
         },
@@ -94,31 +84,19 @@ pub fn get() -> Vec<Scenario> {
         },
         Scenario {
             condition: |players, indices| {
-                for item in players[indices[0]].inventory.iter() {
-                    if let item::Kind::Weapon = item.kind {
-                        return true;
-                    }
-                }
-
-                false
+                players[indices[0]]
+                    .get_item_kind(item::Kind::Weapon)
+                    .is_some()
             },
             message: |players, indices| {
-                let weapon = players[indices[0]]
-                    .inventory
-                    .iter()
-                    .filter(|x| {
-                        if let item::Kind::Weapon = x.kind {
-                            true
-                        } else {
-                            false
-                        }
-                    })
-                    .collect::<Vec<&&item::Item>>()[0];
+                let item_index = players[indices[0]]
+                    .get_item_kind(item::Kind::Weapon)
+                    .unwrap();
                 format!(
                     "{} killed a deer with {} {}.",
                     players[indices[0]].name,
                     players[indices[0]].pronouns.possessive_adj,
-                    weapon.name
+                    players[indices[0]].inventory[item_index].name
                 )
             },
             actions: |_, _| {},

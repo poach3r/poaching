@@ -60,6 +60,32 @@ impl<'a> Player<'a> {
         }
     }
 
+    /// Returns the index of the first item in the
+    /// `Player`'s inventory with the specified `kind`.
+    /// If no such item exists then return `None`.
+    pub fn get_item_kind(&self, kind: item::Kind) -> Option<usize> {
+        for (i, item) in self.inventory.iter().enumerate() {
+            if kind == item.kind {
+                return Some(i);
+            }
+        }
+
+        return None;
+    }
+
+    /// Returns the index of the first item in the
+    /// `Player`'s inventory which matches `predicate_item`.
+    /// If no such item exists then return `None`.
+    pub fn get_item(&self, predicate_item: &item::Item) -> Option<usize> {
+        for (i, item) in self.inventory.iter().enumerate() {
+            if *item == predicate_item {
+                return Some(i);
+            }
+        }
+
+        None
+    }
+
     /// Changes the player's `status` to `Dead`.
     pub fn kill(&mut self) {
         self.status = Status::Dead;

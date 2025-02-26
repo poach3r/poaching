@@ -68,15 +68,7 @@ pub fn get() -> Vec<Scenario> {
             },
         },
         Scenario {
-            condition: |players, indices| {
-                for item in players[indices[0]].inventory.iter() {
-                    if *item == &item::KNIFE {
-                        return true;
-                    }
-                }
-
-                false
-            },
+            condition: |players, indices| players[indices[0]].get_item(&item::KNIFE).is_some(),
             message: |players, indices| {
                 format!(
                     "{} hit {} with a long distance knife throw.",
@@ -84,12 +76,8 @@ pub fn get() -> Vec<Scenario> {
                 )
             },
             actions: |players, indices| {
-                for (i, item) in players[indices[0]].inventory.iter().enumerate() {
-                    if *item == &item::KNIFE {
-                        players[indices[0]].inventory.remove(i);
-                        break;
-                    }
-                }
+                let i = players[indices[0]].get_item(&item::KNIFE).unwrap();
+                players[indices[0]].inventory.remove(i);
                 players[indices[0]].kills += 1;
                 players[indices[1]].kill();
             },
