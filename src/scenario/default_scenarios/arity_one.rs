@@ -103,13 +103,13 @@ pub fn get() -> Vec<Scenario> {
         Scenario::nothing_burger(0, 1, |players, indices| {
             format!("{} sprinted into the woods.", players[indices[0]].name)
         }),
-        Scenario::nothing_burger(1, usize::MAX, |players, indices| {
+        Scenario::nothing_burger(1, 6, |players, indices| {
             format!(
                 "{} questioned {} sanity.",
                 players[indices[0]].name, players[indices[0]].pronouns.possessive_adj
             )
         }),
-        Scenario::nothing_burger(1, usize::MAX, |players, indices| {
+        Scenario::nothing_burger(1, 6, |players, indices| {
             format!(
                 "{} lost one of {} shoes.",
                 players[indices[0]].name, players[indices[0]].pronouns.possessive_adj
@@ -161,7 +161,7 @@ pub fn get() -> Vec<Scenario> {
         },
         Scenario {
             possible_after: 1,
-            impossible_after: usize::MAX,
+            impossible_after: 6,
             condition: |players, indices| {
                 if let status::Status::Alive(status::AliveStatus::Healthy) =
                     players[indices[0]].status

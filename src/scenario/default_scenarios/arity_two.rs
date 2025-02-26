@@ -136,7 +136,7 @@ pub fn get() -> Vec<Scenario> {
         },
         Scenario {
             possible_after: 1,
-            impossible_after: usize::MAX,
+            impossible_after: 6,
             condition: |players, indices| {
                 if let status::Status::Alive(status::AliveStatus::Injured) =
                     players[indices[1]].status
@@ -158,7 +158,7 @@ pub fn get() -> Vec<Scenario> {
         },
         Scenario {
             possible_after: 1,
-            impossible_after: usize::MAX,
+            impossible_after: 4,
             condition: |_, _| true,
             message: |players, indices| {
                 format!(
