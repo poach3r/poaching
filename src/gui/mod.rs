@@ -113,7 +113,7 @@ impl FactoryComponent for Round {
             .launch(gtk::FlowBox::default())
             .detach();
 
-        for player in value.2.clone() {
+        for player in value.2 {
             players.guard().push_front(player);
         }
 
