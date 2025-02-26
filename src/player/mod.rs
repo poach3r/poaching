@@ -45,23 +45,6 @@ impl<'a> From<&JsonPlayer> for Player<'a> {
     }
 }
 
-impl<'a> From<JsonPlayer> for Player<'a> {
-    fn from(value: JsonPlayer) -> Self {
-        let pronouns = match value.gender.as_str() {
-            "Male" | "male" | "MALE" => MALE,
-            "Female" | "female" | "FEMALE" => FEMALE,
-            _ => {
-                warn!(
-                    "Failed to deserialize {}'s gender, defaulting to ENBY.",
-                    &value.name
-                );
-                ENBY
-            }
-        };
-        Self::new(value.name, pronouns, value.district)
-    }
-}
-
 impl<'a> Player<'a> {
     /// Constructs a player at the start of a simulator.
     pub fn new(name: String, pronouns: Pronouns<'a>, district: u8) -> Self {
