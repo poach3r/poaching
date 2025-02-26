@@ -11,26 +11,17 @@ use rand::seq::SliceRandom;
 /// and players. This will be made much more modular
 /// in the future but this is more useful for
 /// rapid prototyping.
-pub fn simulate_game<'a, 'b>(
-    players: &'a mut Vec<Player<'b>>,
-    scenarios: &Vec<Vec<Scenario>>,
-    start_scenarios: &Vec<Vec<Scenario>>,
-) {
+pub fn simulate_game<'a, 'b>(players: &'a mut Vec<Player<'b>>, scenarios: &Vec<Vec<Scenario>>) {
     let mut rng = rand::rng();
-    let mut current_day = 1u16;
-
-    // game start
-    println!("Day 1:");
-    println!("{}", simulate_round(players, &start_scenarios, &mut rng).0);
-    println!();
+    let mut round = 0usize;
 
     // progress rounds
     while get_available_players(&players, 0).len() > 1 {
-        current_day += 1;
-        println!("Day {}:", current_day);
+        println!("Day {}:", round + 1);
         players.shuffle(&mut rng);
-        println!("{}", simulate_round(players, scenarios, &mut rng).0);
+        println!("{}", simulate_round(players, scenarios, &mut rng, round).0);
         println!();
+        round += 1;
     }
 
     match get_available_players(players, 0).first() {
@@ -49,6 +40,7 @@ pub fn simulate_round<'a, 'b, 'c>(
     players: &'a mut Vec<Player<'c>>,
     scenarios: &Vec<Vec<Scenario>>,
     rng: &'b mut ThreadRng,
+    round: usize,
 ) -> (String, bool) {
     let mut string = String::new();
     let mut index: usize = 0;
@@ -63,7 +55,7 @@ pub fn simulate_round<'a, 'b, 'c>(
         }
 
         let indices = get_available_players(players, index);
-        let (scenario, arity) = get_scenario(scenarios, rng, players, &indices);
+        let (scenario, arity) = get_scenario(scenarios, rng, players, &indices, round);
 
         string.push_str(scenario.run(players, &indices, arity).as_str());
         string.push('\n');
@@ -114,6 +106,7 @@ fn get_scenario<'a, 'b>(
     rng: &'b mut ThreadRng,
     players: &Vec<Player>,
     indices: &Vec<usize>,
+    round: usize,
 ) -> (&'a Scenario, usize) {
     loop {
         let mut random_scenes: Vec<(&Scenario, usize)> = Vec::new();
@@ -131,6 +124,10 @@ fn get_scenario<'a, 'b>(
                     );
                 }
             };
+
+            if round < possible_scene.possible_after || round >= possible_scene.impossible_after {
+                continue;
+            }
 
             if (possible_scene.condition)(players, indices) {
                 random_scenes.push((possible_scene, i));

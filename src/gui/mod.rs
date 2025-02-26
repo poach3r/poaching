@@ -136,8 +136,6 @@ struct App {
     #[tracker::do_not_track]
     scenarios: Vec<Vec<Scenario>>,
     #[tracker::do_not_track]
-    start_scenarios: Vec<Vec<Scenario>>,
-    #[tracker::do_not_track]
     rng: ThreadRng,
     #[tracker::do_not_track]
     rounds: FactoryVecDeque<Round>,
@@ -154,7 +152,7 @@ enum AppMsg {
 
 #[relm4::component]
 impl SimpleComponent for App {
-    type Init = (Vec<Player<'static>>, Vec<Vec<Scenario>>, Vec<Vec<Scenario>>);
+    type Init = (Vec<Player<'static>>, Vec<Vec<Scenario>>);
     type Input = AppMsg;
     type Output = ();
 
@@ -216,11 +214,7 @@ impl SimpleComponent for App {
 
                 self.players.shuffle(&mut self.rng);
                 let amt = self.rounds.len();
-                let events = if amt == 0 {
-                    simulate_round(&mut self.players, &self.start_scenarios, &mut self.rng)
-                } else {
-                    simulate_round(&mut self.players, &self.scenarios, &mut self.rng)
-                };
+                let events = simulate_round(&mut self.players, &self.scenarios, &mut self.rng, amt);
 
                 let mut players = self.players.clone();
                 players.sort_by(|x, y| x.district.cmp(&y.district).reverse());
@@ -297,7 +291,6 @@ impl SimpleComponent for App {
         let model = App {
             players: init.0,
             scenarios: init.1,
-            start_scenarios: init.2,
             rng: rand::rng(),
             rounds,
             game_over: false,
@@ -310,13 +303,8 @@ impl SimpleComponent for App {
     }
 }
 
-pub fn run(
-    players: Vec<Player<'static>>,
-    scenarios: Vec<Vec<Scenario>>,
-    start_scenarios: Vec<Vec<Scenario>>,
-    gtk_options: Vec<String>,
-) {
+pub fn run(players: Vec<Player<'static>>, scenarios: Vec<Vec<Scenario>>, gtk_options: Vec<String>) {
     let app = RelmApp::new("org.poach3r.hunger_games").with_args(gtk_options);
     set_global_css(&css::style());
-    app.run::<App>((players, scenarios, start_scenarios));
+    app.run::<App>((players, scenarios));
 }

@@ -33,7 +33,6 @@ fn main() {
     env_logger::init();
 
     let scenarios = scenario::default_scenarios::get();
-    let start_scenarios = scenario::start_scenarios::get();
     let mut players = if let Some(players) = load_players_filename(args.players) {
         players
     } else {
@@ -41,9 +40,9 @@ fn main() {
     };
 
     if args.text_mode {
-        simulator::simulate_game(&mut players, &scenarios, &start_scenarios);
+        simulator::simulate_game(&mut players, &scenarios);
     } else {
-        gui::run(players, scenarios, start_scenarios, args.gtk_options);
+        gui::run(players, scenarios, args.gtk_options);
     }
 }
 
