@@ -15,6 +15,7 @@ pub fn get() -> Vec<Scenario> {
                 )
             },
             actions: |players, indices| {
+                players[indices[0]].kills += 1;
                 players[indices[1]].kill();
             },
         },
@@ -62,6 +63,8 @@ pub fn get() -> Vec<Scenario> {
             actions: |players, indices| {
                 players[indices[0]].kill();
                 players[indices[1]].kill();
+                players[indices[0]].kills += 1;
+                players[indices[1]].kills += 1;
             },
         },
         Scenario {
@@ -81,6 +84,13 @@ pub fn get() -> Vec<Scenario> {
                 )
             },
             actions: |players, indices| {
+                for (i, item) in players[indices[0]].inventory.iter().enumerate() {
+                    if *item == &item::KNIFE {
+                        players[indices[0]].inventory.remove(i);
+                        break;
+                    }
+                }
+                players[indices[0]].kills += 1;
                 players[indices[1]].kill();
             },
         },

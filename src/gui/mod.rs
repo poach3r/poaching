@@ -27,6 +27,8 @@ impl FactoryComponent for PlayerWrapper {
     view! {
         #[root]
         gtk::Box {
+            add_css_class: "background",
+            add_css_class: "container",
             set_orientation: gtk::Orientation::Vertical,
 
             gtk::Label {
@@ -42,7 +44,11 @@ impl FactoryComponent for PlayerWrapper {
             },
 
             gtk::Label {
-                set_text: &self.player.district.to_string()
+                set_text: format!("{} {}", &self.player.kills, if &self.player.kills == &1 {
+                    "Kill"
+                } else {
+                    "Kills"
+                }).as_str()
             }
         }
     }
@@ -100,8 +106,6 @@ impl FactoryComponent for Round {
             },
 
             self.players.widget() -> &gtk::FlowBox {
-                add_css_class: "background",
-                add_css_class: "container",
                 set_orientation: gtk::Orientation::Horizontal,
                 set_halign: gtk::Align::Fill,
             },

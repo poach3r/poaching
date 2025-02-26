@@ -17,6 +17,7 @@ pub struct Player<'a> {
     pub moved: bool,
     pub district: u8,
     pub inventory: Vec<&'a item::Item>,
+    pub kills: u16,
 }
 
 /// Represents a player in JSON form.
@@ -55,6 +56,7 @@ impl<'a> Player<'a> {
             moved: false,
             district,
             inventory: Vec::new(),
+            kills: 0,
         }
     }
 

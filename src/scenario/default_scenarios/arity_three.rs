@@ -26,6 +26,7 @@ pub fn get() -> Vec<Scenario> {
             },
             actions: |players, indices| {
                 players[indices[0]].kill();
+                players[indices[1]].kills += 1;
             },
         },
         //Scenario {
