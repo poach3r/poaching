@@ -14,7 +14,7 @@ impl Scenario {
     /// Prints the result of `get_message` and
     /// performs an action on every player involved.
     pub fn run(&self, players: &mut Vec<Player>, indices: &Vec<usize>, arity: usize) -> String {
-        for index in 0..arity {
+        for index in 0..arity + 1 {
             players[indices[index]].moved = true
         }
 
