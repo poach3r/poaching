@@ -1,0 +1,67 @@
+[
+  {
+    "name": "Henry",
+    "gender": "Male",
+    "district": 1
+  },
+  {
+    "name": "Emily",
+    "gender": "Female",
+    "district": 1
+  },
+  {
+    "name": "Anthony",
+    "gender": "Male",
+    "district": 2
+  },
+  {
+    "name": "James",
+    "gender": "Male",
+    "district": 2
+  },
+  {
+    "name": "Michael",
+    "gender": "Male",
+    "district": 3
+  },
+  {
+    "name": "Robert",
+    "gender": "Male",
+    "district": 3
+  },
+  {
+    "name": "John",
+    "gender": "Male",
+    "district": 4
+  },
+  {
+    "name": "David",
+    "gender": "Male",
+    "district": 4
+  },
+  {
+    "name": "Mary",
+    "gender": "Female",
+    "district": 5
+  },
+  {
+    "name": "Patricia",
+    "gender": "Female",
+    "district": 5
+  },
+  {
+    "name": "Jennifer",
+    "gender": "Female",
+    "district": 5
+  },
+  {
+    "name": "Linda",
+    "gender": "Female",
+    "district": 6
+  },
+  {
+    "name": "Elizabeth",
+    "gender": "Female",
+    "district": 6
+  }
+]

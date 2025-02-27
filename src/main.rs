@@ -18,7 +18,7 @@ use serde_json::Value;
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 struct Args {
-    #[arg(short, long, default_value_t = String::from("players.json"))]
+    #[arg(short, long, default_value_t = String::from("examples/players.json"))]
     players: String,
 
     #[arg(short, long, default_value_t = false)]

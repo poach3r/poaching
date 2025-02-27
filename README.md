@@ -1,4 +1,4 @@
 A hunger games simulator inspired by [Brant Steele's simulator](https://brantsteele.net/hungergames/).
 
-![dark mode screenshot](demo-dark.png)
-![light mode screenshot](demo-light.png)
+![dark mode screenshot](examples/demo-dark.png)
+![light mode screenshot](examples/demo-light.png)
